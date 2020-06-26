@@ -18,7 +18,7 @@ sub submit_for_translation {
     my $arg = $check->(@_);
 
     my $phrases_by_lang = $self->_filter_untranslated_phrases(
-        $arg->english_prhase_id,
+        $arg->english_prase_id,
         $arg->phrase_group_ids,
     ) or die 'No phrases to submit';
 
