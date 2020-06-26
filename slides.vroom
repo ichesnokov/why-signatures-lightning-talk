@@ -185,6 +185,8 @@ sub submit_for_translation ($self, %arg) {
 
 # Typical checks that signatures provide
 sub submit_for_translation ($self, %arg) {
+
+    # Check that the arguments are defined
     croak 'Either english_phrase_id or phrase_groups_ids is required'
         if !$arg{english_phrase_id} && !$arg{phrase_groups_ids};
     croak 'to_langs is required'
@@ -197,10 +199,14 @@ sub submit_for_translation ($self, %arg) {
 
 # Checks for the type of arguments
 sub submit_for_translation ($self, %arg) {
+
+    # Check that the arguments are defined
     croak 'Either english_phrase_id or phrase_groups_ids is required'
         if !$arg{english_phrase_id} && !$arg{phrase_groups_ids};
     croak 'to_langs is required'
       if !$arg{to_langs};
+
+    # Check that the arguments are valid
     croak 'english_phrase_id must be an integer'
       if $arg{english_phrase_id} && !looks_like_number($arg{english_phrase_id});
     croak 'to_langs must be an arrayref'
@@ -212,17 +218,14 @@ sub submit_for_translation ($self, %arg) {
 ---- 
 == Modules that provide argument checking
 +* Regexp::Common
-+* Type constraints
-+  * Type::Tiny
-
----- center
-== Type::Params
-
-Params::Validate-like parameter validation using Type::Tiny type constraints and coercions
++* Type::Tiny
++    * Type::Params - Params::Validate-like parameter validation using Type::Tiny type constraints and coercions
 
 ---- perl, i4
 
 # Type::Params: validated input
+
+package Translator;
 
 use v5.20;
 use Type::Params qw( compile_named );
@@ -248,6 +251,8 @@ sub submit_for_translation {
 
     ...;
 }
+
+1;
 
 ---- perl, i4
 
@@ -296,6 +301,8 @@ sub submit_for_translation {
 ---- perl,i4
 # Type::Params: validated input as an object
 
+package TranslatorOO;
+
 use Type::Params qw( compile_named_oo );
 
 sub submit_for_translation {
@@ -318,6 +325,7 @@ sub submit_for_translation {
     ...;
 }
 
+1;
 
 ---- perl,i4
 
