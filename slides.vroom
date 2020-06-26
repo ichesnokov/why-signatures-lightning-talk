@@ -37,25 +37,12 @@ skip: 0
 ---- center
 == Subroutine signatures
 
-+* Appeared first in v5.20
+* Appeared first in v5.20
 
-+* An experimental feature
-
----- perl,i4
-# Old program, no signatures
-
-use v5.12;
-use warnings;
-
-sub greet {
-    my ($name) = @_;
-    say "Hello, $name!";
-}
-
-greet('world');
+* An experimental feature
 
 ---- perl,i4
-# New program, with signatures
+# Using signatures
 
 use v5.20;
 use warnings;
@@ -68,7 +55,7 @@ sub greet ($name) {
 greet('world');
 
 ---- perl,i4
-# Validating the number of parameters
+# Too few arguments
 
 use v5.20;
 use warnings;
@@ -81,7 +68,7 @@ sub greet ($name) {
 greet();
 
 ---- perl,i4
-# Validating the number of parameters
+# Too many arguments
 
 use v5.20;
 use warnings;
@@ -101,7 +88,7 @@ use v5.20;
 use warnings;
 use experimental qw(signatures);
 
-sub greet ($name = $ENV{USER}) {
+sub greet ($name = 'world') {
     say "Hello, $name!";
 }
 
@@ -117,26 +104,20 @@ Handy?
 
 ---- perl,i4
 
-sub submit_phrase_for_translation {
-    my ($self, $to_lang_id, $english_phrase_id, $turnaround_time) = @_;
-
-    ...;
-}
-
-sub submit_all_for_translation {
-    my ($self, $to_langs, $phrase_groups_ids, $turnaround_time) = @_;
+sub submit_for_translation {
+    my ($self, $to_langs, $english_phrase_id, $phrase_group_ids, $turnaround_time) = @_;
 
     ...;
 }
 
 ---- perl,i4
 
-# One method - with signatures!
+# Using signatures
 sub submit_for_translation (
     $self,
     $to_langs,
-    $english_phrase_id = undef,
-    $phrase_groups_ids = undef,
+    $english_phrase_id,
+    $phrase_groups_ids,
     $turnaround_time = undef
   )
 {
@@ -151,8 +132,7 @@ sub submit_for_translation ($self, %arg) {
 }
 
 ---- center
-== I'm loosing the checks!
-:-(
+== The checks are lost :-(
 
 ---- perl,i4
 
@@ -160,10 +140,10 @@ sub submit_for_translation ($self, %arg) {
 sub submit_for_translation ($self, %arg) {
 
     # Check that the arguments are defined
-    croak 'Either english_phrase_id or phrase_groups_ids is required'
-        if !$arg{english_phrase_id} && !$arg{phrase_groups_ids};
     croak 'to_langs is required'
       if !$arg{to_langs};
+    croak 'Either english_phrase_id or phrase_groups_ids is required'
+        if !$arg{english_phrase_id} && !$arg{phrase_groups_ids};
 
     ...;
 }
@@ -173,17 +153,17 @@ sub submit_for_translation ($self, %arg) {
 # Checks for the type of arguments
 sub submit_for_translation ($self, %arg) {
 
-    # Check that the arguments are defined
-    croak 'Either english_phrase_id or phrase_groups_ids is required'
-        if !$arg{english_phrase_id} && !$arg{phrase_groups_ids};
+    # Arguments are defined
     croak 'to_langs is required'
       if !$arg{to_langs};
+    croak 'Either english_phrase_id or phrase_groups_ids is required'
+        if !$arg{english_phrase_id} && !$arg{phrase_groups_ids};
 
-    # Check that the arguments are valid
-    croak 'english_phrase_id must be an integer'
-      if $arg{english_phrase_id} && !looks_like_number($arg{english_phrase_id});
+    # Arguments are valid
     croak 'to_langs must be an arrayref'
       if $arg{to_langs} && ref($arg{to_langs}) ne 'ARRAY';
+    croak 'english_phrase_id must be an integer'
+      if $arg{english_phrase_id} && !looks_like_number($arg{english_phrase_id});
 
     ...;
 }
@@ -191,8 +171,10 @@ sub submit_for_translation ($self, %arg) {
 ---- 
 == Modules that provide argument checking
 +* Regexp::Common
++    * Probably too "battle-tested" for today
 +* Type::Tiny
-+    * Type::Params - Params::Validate-like parameter validation using Type::Tiny type constraints and coercions
++    * More "current" and widely used in Moo(se) infrastructure
++    * Type::Params - parameter validation using Type::Tiny type constraints and coercions
 
 ---- perl, i4
 
@@ -310,40 +292,17 @@ TranslatorOO->submit_for_translation(
     english_phrase_id => 123,
 );
 
----- perl,i4
-
-# Predicates
-sub submit_for_translation {
-    my $self = shift;
-
-    state $check = compile_named_oo(
-        to_langs          => ArrayRef [Str],
-        english_phrase_id => Optional [PositiveInt] =>
-            { predicate => 'has_english_phrase_id' },
-        phrase_group_ids  => Optional [ ArrayRef [PositiveInt] ] =>
-            { predicate => 'has_phrase_group_ids' },
-        turnaround_time   => Optional [ Enum [ 1, 3, 5 ] ],
-    );
-
-    my $arg = $check->(@_);
-
-    if ($arg->has_english_phrase_id) {
-        # Fetch a phrase by its ID
-    } elsif ($arg->has_phrase_group_ids) {
-        # Fetch phrases by group IDs
-    }
-    croak 'Either english_phrase_id or phrase_group_ids is required';
-}
-
 ----
 == Type::Params also supports:
-+* Checking positional parameters
++* Checking of positional parameters
 +* Default values
++* Predicates for optional arguments
 +* Multiple signatures
 +* ...and more
 
 ---- center
-== So, do you still need the built-in signatures?
+== Do you still need the built-in signatures?
++;-)
 
 ----
 
