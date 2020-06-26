@@ -94,19 +94,6 @@ sub greet ($name) {
 greet(qw(precious world));
 
 ---- perl,i4
-# Caveat: Validating the *number* of parameters
-
-use v5.20;
-use warnings;
-use experimental qw(signatures);
-
-sub greet ($name) {
-    say "Hello, $name!";
-}
-
-greet(undef);
-
----- perl,i4
 
 # Default parameter values
 
@@ -119,20 +106,6 @@ sub greet ($name = $ENV{USER}) {
 }
 
 greet();
-
----- perl,i4
-
-# Caveat: Default parameter values
-
-use v5.20;
-use warnings;
-use experimental qw(signatures);
-
-sub greet ($name = $ENV{USER}) {
-    say "Hello, $name!";
-}
-
-greet(undef);
 
 ---- center
 Handy?
