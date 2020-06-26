@@ -1,0 +1,69 @@
+" Text width is 78 columns for Perl source code
+au BufNewFile,BufRead *.pl set tw=78
+au BufNewFile,BufRead *.pm set tw=78
+au BufNewFile,BufRead *.t  set tw=78
+
+" Highlight TT templates
+au BufNewFile,BufRead *.tt set filetype=tt2html
+au BufNewFile,BufRead *.html set filetype=tt2html
+
+" Always show status line
+set laststatus=2
+
+" Подсвечивание результатов поиска
+set hlsearch
+
+" Подсвечивать соответствующую скобку
+set showmatch
+
+" Настройка табуляции
+set tabstop=8
+set shiftwidth=4
+set softtabstop=4
+set expandtab
+set smarttab
+set shiftround
+
+set autowrite               " Write on :next/:prev/^Z
+set backspace=indent,eol,start
+
+
+set autoindent
+"set smartindent
+
+set incsearch
+
+set novisualbell
+set t_vb=
+set visualbell
+
+set pastetoggle=<F12>
+
+"autocmd FileType perl syn include @perlDATA syntax/MojoliciousTemplate.vim
+
+" Запрещаем Perl::Tags - ошибка 
+let Perl_PerlTags="disabled"
+
+" automatically remove trailing whitespace before write
+function! StripTrailingWhitespace()
+  normal mZ
+  %s/\s\+$//e
+  if line("'Z") != line(".")
+    echo "Stripped whitespace\n"
+  endif
+  normal `Z
+endfunction
+
+" Разрешить для удаления пробелов в конце строки при каждой записи файла
+"autocmd BufWritePre *.pl,*.pm :call StripTrailingWhitespace()
+
+syntax on
+set background=dark
+colorscheme evening
+
+" Toggle paste mode
+nmap \o :set paste!<CR>:set paste?<CR>
+
+set matchpairs+=<:>
+set modeline
+set modelines=5
