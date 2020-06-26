@@ -1,0 +1,364 @@
+# This is a sample Vroom input file. It should help you get started.
+#
+# Edit this file with your content. Then run `vroom vroom` to start
+# the show!
+#
+# See `perldoc Vroom` for complete details.
+#
+---- config
+# Basic config options.
+title: Subroutine signatures - do you still need them?
+indent: 5
+auto_size: 1
+# height: 18
+# width: 69
+vim_opts: '-u NONE'
+skip: 0
+
+# The following options are for Gvim usage.
+# vim: gvim
+# gvimrc: |
+#   set fuopt=maxhorz,maxvert
+#   set guioptions=egmLtT
+#   set guifont=Bitstream_Vera_Sans_Mono:h18
+#   set guicursor=a:blinkon0-ver25-Cursor
+#   colorscheme default
+
+---- center
+== Subroutine signatures.
+
+== Do you still need them?
+
+---- center
+== Subroutine signatures
+
++* Appeared first in v5.20
+
++* An experimental feature
+
+---- perl,i4
+# Old program, no signatures
+
+use v5.12;
+use warnings;
+
+sub greet {
+    my ($name) = @_;
+    say "Hello, $name!";
+}
+
+greet('world');
+
+---- perl,i4
+# New program, with signatures
+
+use v5.20;
+use warnings;
+use experimental qw(signatures);
+
+sub greet ($name) {
+    say "Hello, $name!";
+}
+
+greet('world');
+
+---- perl,i4
+# Validating the number of parameters
+
+use v5.20;
+use warnings;
+use experimental qw(signatures);
+
+sub greet ($name) {
+    say "Hello, $name!";
+}
+
+greet();
+
+---- perl,i4
+# Validating the number of parameters
+
+use v5.20;
+use warnings;
+use experimental qw(signatures);
+
+sub greet ($name) {
+    say "Hello, $name!";
+}
+
+greet(qw(precious world));
+
+---- perl,i4
+# Caveat: Validating the *number* of parameters
+
+use v5.20;
+use warnings;
+use experimental qw(signatures);
+
+sub greet ($name) {
+    say "Hello, $name!";
+}
+
+greet(undef);
+
+---- perl,i4
+
+# Default parameter values
+
+use v5.20;
+use warnings;
+use experimental qw(signatures);
+
+sub greet ($name = $ENV{USER}) {
+    say "Hello, $name!";
+}
+
+greet();
+
+---- perl,i4
+
+# Caveat: Default parameter values
+
+use v5.20;
+use warnings;
+use experimental qw(signatures);
+
+sub greet ($name = $ENV{USER}) {
+    say "Hello, $name!";
+}
+
+greet(undef);
+
+---- center
+Handy?
+
++Yes.
+
+----
+== Recently at $work...
+
+---- perl,i4
+
+sub submit_phrase_for_translation {
+    my ($self, $to_lang_id, $english_phrase_id, $turnaround_time) = @_;
+
+    ...;
+}
+
+sub submit_all_for_translation {
+    my ($self, $to_langs, $phrase_groups_ids, $turnaround_time) = @_;
+
+    ...;
+}
+
+---- perl,i4
+
+# One method - with signatures!
+sub submit_for_translation (
+    $self,
+    $to_langs,
+    $english_phrase_id = undef,
+    $phrase_groups_ids = undef,
+    $turnaround_time = undef
+  )
+{
+    ...;
+}
+
+---- perl,i4
+
+# Named arguments
+sub submit_for_translation ($self, %arg) {
+    ...;
+}
+
+---- center
+== I'm loosing the checks!
++ :-(
+
+---- perl,i4
+
+# Typical checks that signatures provide
+sub submit_for_translation ($self, %arg) {
+    croak 'Either english_phrase_id or phrase_groups_ids is required'
+        if !$arg{english_phrase_id} && !$arg{phrase_groups_ids};
+    croak 'to_langs is required'
+      if !$arg{to_langs};
+
+    ...;
+}
+
+---- perl,i4
+
+# Checks for the type of arguments
+sub submit_for_translation ($self, %arg) {
+    croak 'Either english_phrase_id or phrase_groups_ids is required'
+        if !$arg{english_phrase_id} && !$arg{phrase_groups_ids};
+    croak 'to_langs is required'
+      if !$arg{to_langs};
+    croak 'english_phrase_id must be an integer'
+      if $arg{english_phrase_id} && !looks_like_number($arg{english_phrase_id});
+    croak 'to_langs must be an arrayref'
+      if $arg{to_langs} && ref($arg{to_langs}) ne 'ARRAY';
+
+    ...;
+}
+
+---- 
+== Modules that provide argument checking
++* Regexp::Common
++* Type constraints
++  * Type::Tiny
+
+---- center
+== Type::Params
+
+Params::Validate-like parameter validation using Type::Tiny type constraints and coercions
+
+---- perl, i4
+
+# Type::Params: validated input
+
+use v5.20;
+use Type::Params qw( compile_named );
+use Types::Common::Numeric qw( PositiveInt );
+use Types::Standard qw( ArrayRef Enum Optional Str );
+
+sub submit_for_translation {
+    my $self = shift;
+
+    state $check = compile_named(
+        to_langs          => ArrayRef [Str],
+        english_phrase_id => Optional [PositiveInt],
+        phrase_group_ids  => Optional [ ArrayRef [PositiveInt] ],
+        turnaround_time   => Optional [ Enum [ 1, 3, 5 ] ],
+    );
+
+    my $arg = $check->(@_);
+
+    my $phrases_by_lang = $self->_filter_untranslated_phrases(
+        $arg->{english_prase_id},
+        $arg->{phrase_group_ids},
+    ) or die 'No phrases to submit';
+
+    ...;
+}
+
+---- perl, i4
+
+use lib::abs qw(lib);
+use Translator;
+
+# Without arguments
+Translator->submit_for_translation();
+
+---- perl, i4
+
+use lib::abs qw(lib);
+use Translator;
+
+# With incorrect arguments
+Translator->submit_for_translation(
+    to_langs          => ['es'],
+    english_phrase_id => -10,      # Not a positive integer
+);
+
+---- perl, i4
+
+# Typo!
+sub submit_for_translation {
+    my $self = shift;
+
+    state $check = compile_named(
+        to_langs          => ArrayRef [Str],
+        english_phrase_id => Optional [PositiveInt],
+        phrase_group_ids  => Optional [ ArrayRef [PositiveInt] ],
+        turnaround_time   => Optional [ Enum [ 1, 3, 5 ] ],
+    );
+
+    my $arg = $check->(@_);
+
+    my $phrases_by_lang = $self->_filter_untranslated_phrases(
+
+        # Typo: prase
+        $arg->{english_prase_id},
+        $arg->{phrase_group_ids},
+    ) or die 'No phrases to submit';
+
+    ...;
+}
+
+---- perl,i4
+# Type::Params: validated input as an object
+
+use v5.20;
+use Type::Params qw( compile_named_oo );
+use Types::Common::Numeric qw( PositiveInt );
+use Types::Standard qw( ArrayRef Enum Optional Str );
+
+sub submit_for_translation {
+    my $self = shift;
+
+    state $check = compile_named_oo(
+        to_langs          => ArrayRef [Str],
+        english_phrase_id => Optional [PositiveInt],
+        phrase_group_ids  => Optional [ ArrayRef [PositiveInt] ],
+        turnaround_time   => Optional [ Enum [ 1, 3, 5 ] ],
+    );
+
+    my $arg = $check->(@_);
+
+    my $phrases_by_lang = $self->_filter_untranslated_phrases(
+        $arg->english_prase_id,
+        $arg->phrase_group_ids,
+    ) or die 'No phrases to submit';
+
+    ...;
+}
+
+---- perl,i4
+
+use lib::abs qw(lib);
+use TranslatorOO;
+
+# Correct arguments, but...
+TranslatorOO->submit_for_translation(
+    to_langs          => ['es'],
+    english_phrase_id => 123,
+);
+
+---- center
+== So, do we still need subroutine signatures?
+
+---- perl, i4
+
+# Maybe, like so?
+sub submit_for_translation ($self, @args) {
+
+    state $check = compile_named_oo(...);
+    my $arg = $check->(@args);
+
+    ...;
+}
+
+---- perl, i4
+
+# "Old way" looks valid too
+sub submit_for_translation {
+    my $self = shift;
+    state $check = compile_named_oo(...);
+    my $arg = $check->(@_);
+
+    ...;
+}
+
+----
+
+== THANK YOU!
+
+Ilya Chesnokov <chesnokov.ilya@gmail.com>
+
+* https://www.effectiveperlprogramming.com/2015/04/use-v5-20-subroutine-signatures/
+* https://metacpan.org/pod/Type::Tiny
+* https://metacpan.org/pod/Type::Params
+* https://metacpan.org/pod/Vroom
