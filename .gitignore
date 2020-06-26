@@ -1,1 +1,6 @@
 *.sw[p-z]
+
+# Vroom-generated files
+0*
+.help
+.vimrc
