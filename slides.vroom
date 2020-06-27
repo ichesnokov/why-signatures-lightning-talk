@@ -311,6 +311,5 @@ TranslatorOO->submit_for_translation(
 Ilya Chesnokov <chesnokov.ilya@gmail.com>
 
 * https://www.effectiveperlprogramming.com/2015/04/use-v5-20-subroutine-signatures/
-* https://metacpan.org/pod/Type::Tiny
 * https://metacpan.org/pod/Type::Params
-* https://metacpan.org/pod/Vroom
+* https://github.com/ichesnokov/why-signatures-lightning-talk
